@@ -1,82 +1,42 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Add error handling middleware
+// Simple test endpoint
+app.get("/api/test", (req, res) => {
+  res.json({ message: "Server is working!", timestamp: new Date().toISOString() });
+});
+
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// Simple fallback for all other routes
+app.use("*", (req, res) => {
+  res.status(200).send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>MadisonAI Solutions</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+      </head>
+      <body>
+        <h1>MadisonAI Solutions</h1>
+        <p>Server is running! Check /api/health for status.</p>
+      </body>
+    </html>
+  `);
+});
+
+// Error handling
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Express error:', err);
-  const status = err.status || err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
-
-  res.status(status).json({ message });
+  res.status(500).json({ message: "Internal Server Error" });
 });
-
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
-});
-
-// Initialize the app
-(async () => {
-  try {
-    const server = await registerRoutes(app);
-
-    // importantly only setup vite in development and after
-    // setting up all the other routes so the catch-all route
-    // doesn't interfere with the other routes
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-    } else {
-      serveStatic(app);
-    }
-
-    // For Vercel, we export the app instead of listening
-    if (process.env.NODE_ENV !== "production" || process.env.VERCEL !== "1") {
-      // Serve the app on port 3000 to avoid conflicts with macOS ControlCenter
-      // this serves both the API and the client.
-      const port = process.env.PORT || 3000;
-      server.listen({
-        port,
-        host: "0.0.0.0",
-        reusePort: true,
-      }, () => {
-        log(`serving on port ${port}`);
-      });
-    }
-  } catch (error) {
-    console.error('Failed to initialize app:', error);
-    throw error;
-  }
-})();
 
 // Export for Vercel
 export default app;
