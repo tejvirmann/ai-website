@@ -2,6 +2,16 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 
 const app = express();
+
+// Add error handling middleware at the top
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('Express error:', err);
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+
+  res.status(status).json({ message });
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -44,12 +54,6 @@ app.use(express.urlencoded({ extended: false }));
     throw error;
   }
 })();
-
-// Error handling
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('Express error:', err);
-  res.status(500).json({ message: "Internal Server Error" });
-});
 
 // Export for Vercel
 export default app;
