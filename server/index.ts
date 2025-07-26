@@ -1,5 +1,53 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { storage } from "./storage";
+
+// Inline storage implementation
+interface ContactInquiry {
+  id: number;
+  fullName: string;
+  email: string;
+  businessName: string;
+  phoneNumber: string | null;
+  industry: string | null;
+  businessChallenge: string;
+  preferredContactMethod: string | null;
+  createdAt: Date;
+}
+
+class SimpleStorage {
+  private contactInquiries: Map<number, ContactInquiry> = new Map();
+  private currentId: number = 1;
+
+  async createContactInquiry(data: {
+    fullName: string;
+    email: string;
+    businessName: string;
+    phoneNumber?: string | null;
+    industry?: string | null;
+    businessChallenge: string;
+    preferredContactMethod?: string | null;
+  }): Promise<ContactInquiry> {
+    const id = this.currentId++;
+    const inquiry: ContactInquiry = {
+      id,
+      fullName: data.fullName,
+      email: data.email,
+      businessName: data.businessName,
+      phoneNumber: data.phoneNumber || null,
+      industry: data.industry || null,
+      businessChallenge: data.businessChallenge,
+      preferredContactMethod: data.preferredContactMethod || null,
+      createdAt: new Date()
+    };
+    this.contactInquiries.set(id, inquiry);
+    return inquiry;
+  }
+
+  async getContactInquiries(): Promise<ContactInquiry[]> {
+    return Array.from(this.contactInquiries.values());
+  }
+}
+
+const storage = new SimpleStorage();
 
 const app = express();
 
@@ -20,12 +68,12 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Contact endpoint with storage
+// Contact endpoint with inline storage
 app.post("/api/contact", async (req, res) => {
   try {
     console.log("Contact form submitted:", req.body);
     
-    // Simple validation without complex schema
+    // Simple validation
     const { fullName, email, businessName, businessChallenge } = req.body;
     if (!fullName || !email || !businessName || !businessChallenge) {
       return res.status(400).json({ 
