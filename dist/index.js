@@ -269,12 +269,18 @@ app.use((req, res, next) => {
   } else {
     serveStatic(app);
   }
-  const port = process.env.PORT || 3e3;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  if (process.env.NODE_ENV !== "production" || process.env.VERCEL !== "1") {
+    const port = process.env.PORT || 3e3;
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true
+    }, () => {
+      log(`serving on port ${port}`);
+    });
+  }
 })();
+var index_default = app;
+export {
+  index_default as default
+};

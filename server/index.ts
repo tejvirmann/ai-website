@@ -36,6 +36,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// Initialize the app
 (async () => {
   const server = await registerRoutes(app);
 
@@ -56,14 +57,20 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Serve the app on port 3000 to avoid conflicts with macOS ControlCenter
-  // this serves both the API and the client.
-  const port = process.env.PORT || 3000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  // For Vercel, we export the app instead of listening
+  if (process.env.NODE_ENV !== "production" || process.env.VERCEL !== "1") {
+    // Serve the app on port 3000 to avoid conflicts with macOS ControlCenter
+    // this serves both the API and the client.
+    const port = process.env.PORT || 3000;
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`serving on port ${port}`);
+    });
+  }
 })();
+
+// Export for Vercel
+export default app;
