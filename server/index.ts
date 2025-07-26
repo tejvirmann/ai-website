@@ -1,4 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
+import path from "path";
+import fs from "fs";
 
 // Inline storage implementation
 interface ContactInquiry {
@@ -116,24 +118,49 @@ app.get("/api/contact", async (req, res) => {
   }
 });
 
-// Simple fallback for all other routes
-app.use("*", (req, res) => {
-  res.status(200).send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>MadisonAI Solutions</title>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-      </head>
-      <body>
-        <h1>MadisonAI Solutions</h1>
-        <p>Server is running! Check /api/health for status.</p>
-        <p>Contact form endpoint: /api/contact</p>
-      </body>
-    </html>
-  `);
-});
+// Serve static files from the built frontend
+const distPath = path.resolve(__dirname, "..", "dist", "public");
+
+if (fs.existsSync(distPath)) {
+  console.log(`Serving static files from: ${distPath}`);
+  app.use(express.static(distPath));
+  
+  // Serve index.html for all non-API routes (SPA routing)
+  app.get("*", (req, res) => {
+    if (!req.path.startsWith("/api")) {
+      const indexPath = path.join(distPath, "index.html");
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        res.status(404).send("Frontend not built");
+      }
+    }
+  });
+} else {
+  console.warn(`Static files not found at: ${distPath}`);
+  
+  // Fallback for when frontend is not built
+  app.use("*", (req, res) => {
+    if (!req.path.startsWith("/api")) {
+      res.status(200).send(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>MadisonAI Solutions</title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+          </head>
+          <body>
+            <h1>MadisonAI Solutions</h1>
+            <p>Server is running! Check /api/health for status.</p>
+            <p>Contact form endpoint: /api/contact</p>
+            <p>Frontend is being built...</p>
+          </body>
+        </html>
+      `);
+    }
+  });
+}
 
 // Export for Vercel
 export default app;
