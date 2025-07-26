@@ -70,10 +70,28 @@ export async function setupVite(app: Express, server: Server) {
 export function serveStatic(app: Express) {
   const distPath = path.resolve(import.meta.dirname, "..", "dist", "public");
 
+  // Check if the build directory exists, if not, serve a simple fallback
   if (!fs.existsSync(distPath)) {
-    throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+    console.warn(`Build directory not found: ${distPath}, serving fallback`);
+    
+    // Serve a simple fallback page instead of crashing
+    app.use("*", (_req, res) => {
+      res.status(200).send(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>MadisonAI Solutions</title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+          </head>
+          <body>
+            <h1>MadisonAI Solutions</h1>
+            <p>Website is being deployed. Please check back soon.</p>
+          </body>
+        </html>
+      `);
+    });
+    return;
   }
 
   app.use(express.static(distPath));
