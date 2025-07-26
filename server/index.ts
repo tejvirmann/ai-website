@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import { storage } from "./storage";
 
 const app = express();
 
@@ -19,16 +20,48 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Simple contact endpoint (without storage for now)
+// Contact endpoint with storage
 app.post("/api/contact", async (req, res) => {
   try {
     console.log("Contact form submitted:", req.body);
+    
+    // Simple validation without complex schema
+    const { fullName, email, businessName, businessChallenge } = req.body;
+    if (!fullName || !email || !businessName || !businessChallenge) {
+      return res.status(400).json({ 
+        message: "Missing required fields" 
+      });
+    }
+
+    const inquiry = await storage.createContactInquiry({
+      fullName,
+      email,
+      businessName,
+      businessChallenge,
+      phoneNumber: req.body.phoneNumber || null,
+      industry: req.body.industry || null,
+      preferredContactMethod: req.body.preferredContactMethod || null
+    });
+
     res.status(201).json({ 
       message: "Contact inquiry submitted successfully",
-      id: Date.now() 
+      id: inquiry.id 
     });
   } catch (error) {
     console.error("Contact form error:", error);
+    res.status(500).json({ 
+      message: "Internal server error" 
+    });
+  }
+});
+
+// Get contact inquiries
+app.get("/api/contact", async (req, res) => {
+  try {
+    const inquiries = await storage.getContactInquiries();
+    res.json(inquiries);
+  } catch (error) {
+    console.error("Get inquiries error:", error);
     res.status(500).json({ 
       message: "Internal server error" 
     });
