@@ -1,6 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";   // <-- Added this import
+
+// Polyfill for __dirname in ES module scope
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Inline storage implementation
 interface ContactInquiry {
@@ -12,7 +17,7 @@ interface ContactInquiry {
   industry: string | null;
   businessChallenge: string;
   preferredContactMethod: string | null;
-  createdAt: Date;
+  createdAt: Date;   // <-- Add this line
 }
 
 class SimpleStorage {
@@ -53,7 +58,6 @@ const storage = new SimpleStorage();
 
 const app = express();
 
-// Add error handling middleware at the top
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Express error:', err);
   const status = err.status || err.statusCode || 500;
@@ -65,21 +69,18 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Health check endpoint
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Contact endpoint with inline storage
 app.post("/api/contact", async (req, res) => {
   try {
     console.log("Contact form submitted:", req.body);
-    
-    // Simple validation
+
     const { fullName, email, businessName, businessChallenge } = req.body;
     if (!fullName || !email || !businessName || !businessChallenge) {
-      return res.status(400).json({ 
-        message: "Missing required fields" 
+      return res.status(400).json({
+        message: "Missing required fields"
       });
     }
 
@@ -93,39 +94,36 @@ app.post("/api/contact", async (req, res) => {
       preferredContactMethod: req.body.preferredContactMethod || null
     });
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: "Contact inquiry submitted successfully",
-      id: inquiry.id 
+      id: inquiry.id
     });
   } catch (error) {
     console.error("Contact form error:", error);
-    res.status(500).json({ 
-      message: "Internal server error" 
+    res.status(500).json({
+      message: "Internal server error"
     });
   }
 });
 
-// Get contact inquiries
 app.get("/api/contact", async (req, res) => {
   try {
     const inquiries = await storage.getContactInquiries();
     res.json(inquiries);
   } catch (error) {
     console.error("Get inquiries error:", error);
-    res.status(500).json({ 
-      message: "Internal server error" 
+    res.status(500).json({
+      message: "Internal server error"
     });
   }
 });
 
-// Serve static files from the built frontend
 const distPath = path.resolve(__dirname, "..", "dist", "public");
 
 if (fs.existsSync(distPath)) {
   console.log(`Serving static files from: ${distPath}`);
   app.use(express.static(distPath));
-  
-  // Serve index.html for all non-API routes (SPA routing)
+
   app.get("*", (req, res) => {
     if (!req.path.startsWith("/api")) {
       const indexPath = path.join(distPath, "index.html");
@@ -138,8 +136,7 @@ if (fs.existsSync(distPath)) {
   });
 } else {
   console.warn(`Static files not found at: ${distPath}`);
-  
-  // Fallback for when frontend is not built
+
   app.use("*", (req, res) => {
     if (!req.path.startsWith("/api")) {
       res.status(200).send(`
@@ -162,5 +159,10 @@ if (fs.existsSync(distPath)) {
   });
 }
 
-// Export for Vercel
 export default app;
+
+// --- Start server if this file is executed directly ---
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
