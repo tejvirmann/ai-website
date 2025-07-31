@@ -138,9 +138,3 @@ if (fs.existsSync(distPath)) {
 }
 
 export default app;
-
-// --- Start server if this file is executed directly ---
-const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
