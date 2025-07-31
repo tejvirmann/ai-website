@@ -1,34 +1,53 @@
 // server/index.ts
+import "dotenv/config";
 import express from "express";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
+
+// shared/schema.ts
+import { pgTable, text, serial, timestamp } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+var users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull()
+});
+var contactInquiries = pgTable("contact_inquiries", {
+  id: serial("id").primaryKey(),
+  fullName: text("full_name").notNull(),
+  email: text("email").notNull(),
+  businessName: text("business_name").notNull(),
+  phoneNumber: text("phone_number"),
+  industry: text("industry"),
+  businessChallenge: text("business_challenge").notNull(),
+  preferredContactMethod: text("preferred_contact_method"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+var insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  password: true
+});
+var insertContactInquirySchema = createInsertSchema(contactInquiries).pick({
+  fullName: true,
+  email: true,
+  businessName: true,
+  phoneNumber: true,
+  industry: true,
+  businessChallenge: true,
+  preferredContactMethod: true
+});
+
+// server/index.ts
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = path.dirname(__filename);
-var SimpleStorage = class {
-  contactInquiries = /* @__PURE__ */ new Map();
-  currentId = 1;
-  async createContactInquiry(data) {
-    const id = this.currentId++;
-    const inquiry = {
-      id,
-      fullName: data.fullName,
-      email: data.email,
-      businessName: data.businessName,
-      phoneNumber: data.phoneNumber || null,
-      industry: data.industry || null,
-      businessChallenge: data.businessChallenge,
-      preferredContactMethod: data.preferredContactMethod || null,
-      createdAt: /* @__PURE__ */ new Date()
-    };
-    this.contactInquiries.set(id, inquiry);
-    return inquiry;
-  }
-  async getContactInquiries() {
-    return Array.from(this.contactInquiries.values());
-  }
-};
-var storage = new SimpleStorage();
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is required");
+}
+var sql = neon(process.env.DATABASE_URL);
+var db = drizzle(sql);
 var app = express();
 app.use((err, _req, res, _next) => {
   console.error("Express error:", err);
@@ -50,7 +69,7 @@ app.post("/api/contact", async (req, res) => {
         message: "Missing required fields"
       });
     }
-    const inquiry = await storage.createContactInquiry({
+    const insertData = {
       fullName,
       email,
       businessName,
@@ -58,7 +77,8 @@ app.post("/api/contact", async (req, res) => {
       phoneNumber: req.body.phoneNumber || null,
       industry: req.body.industry || null,
       preferredContactMethod: req.body.preferredContactMethod || null
-    });
+    };
+    const [inquiry] = await db.insert(contactInquiries).values(insertData).returning();
     res.status(201).json({
       message: "Contact inquiry submitted successfully",
       id: inquiry.id
@@ -72,7 +92,7 @@ app.post("/api/contact", async (req, res) => {
 });
 app.get("/api/contact", async (req, res) => {
   try {
-    const inquiries = await storage.getContactInquiries();
+    const inquiries = await db.select().from(contactInquiries);
     res.json(inquiries);
   } catch (error) {
     console.error("Get inquiries error:", error);
