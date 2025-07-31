@@ -32,25 +32,25 @@ export function Header() {
           <div className="hidden md:flex items-center space-x-8">
             <button 
               onClick={() => scrollToSection("services")}
-              className="text-brand-gray hover:text-brand-blue transition-colors"
+              className="text-gray-700 hover:text-brand-blue transition-colors font-medium"
             >
               Services
             </button>
             <button 
               onClick={() => scrollToSection("about")}
-              className="text-brand-gray hover:text-brand-blue transition-colors"
+              className="text-gray-700 hover:text-brand-blue transition-colors font-medium"
             >
               About
             </button>
             <button 
               onClick={() => scrollToSection("portfolio")}
-              className="text-brand-gray hover:text-brand-blue transition-colors"
+              className="text-gray-700 hover:text-brand-blue transition-colors font-medium"
             >
               Portfolio
             </button>
             <button 
               onClick={() => scrollToSection("pricing")}
-              className="text-brand-gray hover:text-brand-blue transition-colors"
+              className="text-gray-700 hover:text-brand-blue transition-colors font-medium"
             >
               Pricing
             </button>
@@ -79,25 +79,25 @@ export function Header() {
             <div className="flex flex-col space-y-4">
               <button 
                 onClick={() => scrollToSection("services")}
-                className="text-brand-gray hover:text-brand-blue transition-colors text-left"
+                className="text-gray-700 hover:text-brand-blue transition-colors text-left font-medium"
               >
                 Services
               </button>
               <button 
                 onClick={() => scrollToSection("about")}
-                className="text-brand-gray hover:text-brand-blue transition-colors text-left"
+                className="text-gray-700 hover:text-brand-blue transition-colors text-left font-medium"
               >
                 About
               </button>
               <button 
                 onClick={() => scrollToSection("portfolio")}
-                className="text-brand-gray hover:text-brand-blue transition-colors text-left"
+                className="text-gray-700 hover:text-brand-blue transition-colors text-left font-medium"
               >
                 Portfolio
               </button>
               <button 
                 onClick={() => scrollToSection("pricing")}
-                className="text-brand-gray hover:text-brand-blue transition-colors text-left"
+                className="text-gray-700 hover:text-brand-blue transition-colors text-left font-medium"
               >
                 Pricing
               </button>

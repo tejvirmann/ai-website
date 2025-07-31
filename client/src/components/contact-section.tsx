@@ -74,14 +74,14 @@ export function ContactSection() {
         
         <div className="grid md:grid-cols-2 gap-12">
           {/* Contact Form */}
-          <Card className="shadow-lg text-brand-gray">
+          <Card className="shadow-lg bg-white text-gray-900">
             <CardContent className="p-8">
               <h3 className="text-2xl font-bold text-brand-blue mb-6">Get Your Free Consultation</h3>
               {isSubmitted ? (
                 <div className="text-center py-8">
                   <CheckCircle className="mx-auto mb-4 text-green-500" size={48} />
                   <h4 className="text-xl font-semibold text-brand-blue mb-2">Thank you!</h4>
-                  <p className="text-brand-gray">We'll contact you within 24 hours to discuss your AI automation needs.</p>
+                  <p className="text-gray-700">We'll contact you within 24 hours to discuss your AI automation needs.</p>
                 </div>
               ) : (
                 <Form {...form}>
@@ -91,7 +91,7 @@ export function ContactSection() {
                       name="fullName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Full Name *</FormLabel>
+                          <FormLabel className="text-gray-700 font-medium">Full Name *</FormLabel>
                           <FormControl>
                             <Input placeholder="John Smith" {...field} />
                           </FormControl>
@@ -105,7 +105,7 @@ export function ContactSection() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Business Email *</FormLabel>
+                          <FormLabel className="text-gray-700 font-medium">Business Email *</FormLabel>
                           <FormControl>
                             <Input type="email" placeholder="john@business.com" {...field} />
                           </FormControl>
@@ -119,7 +119,7 @@ export function ContactSection() {
                       name="businessName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Business Name *</FormLabel>
+                          <FormLabel className="text-gray-700 font-medium">Business Name *</FormLabel>
                           <FormControl>
                             <Input placeholder="Smith & Associates" {...field} />
                           </FormControl>
@@ -133,7 +133,7 @@ export function ContactSection() {
                       name="phoneNumber"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Phone Number</FormLabel>
+                          <FormLabel className="text-gray-700 font-medium">Phone Number</FormLabel>
                           <FormControl>
                             <Input type="tel" placeholder="(608) 555-0123" {...field} />
                           </FormControl>
@@ -147,7 +147,7 @@ export function ContactSection() {
                       name="industry"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Industry</FormLabel>
+                          <FormLabel className="text-gray-700 font-medium">Industry</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
@@ -173,7 +173,7 @@ export function ContactSection() {
                       name="businessChallenge"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Business Challenge *</FormLabel>
+                          <FormLabel className="text-gray-700 font-medium">Business Challenge *</FormLabel>
                           <FormControl>
                             <Textarea 
                               rows={4} 
@@ -191,7 +191,7 @@ export function ContactSection() {
                       name="preferredContactMethod"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Preferred Contact Method</FormLabel>
+                          <FormLabel className="text-gray-700 font-medium">Preferred Contact Method</FormLabel>
                           <FormControl>
                             <RadioGroup onValueChange={field.onChange} defaultValue={field.value}>
                               <div className="flex items-center space-x-2">
