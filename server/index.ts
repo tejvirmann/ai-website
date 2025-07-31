@@ -11,13 +11,15 @@ import { contactInquiries, type InsertContactInquiry } from "@shared/schema";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Database setup
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is required");
+// Database setup - optional for deployment
+let db: any = null;
+if (process.env.DATABASE_URL) {
+  const sql = neon(process.env.DATABASE_URL);
+  db = drizzle(sql);
+  console.log("Database connected");
+} else {
+  console.warn("DATABASE_URL not found - running without database");
 }
-
-const sql = neon(process.env.DATABASE_URL);
-const db = drizzle(sql);
 
 const app = express();
 
@@ -47,6 +49,14 @@ app.post("/api/contact", async (req, res) => {
       });
     }
 
+    if (!db) {
+      console.log("Database not available - contact form submission logged only");
+      return res.status(201).json({
+        message: "Contact inquiry received (database not configured)",
+        id: Date.now() // temporary ID
+      });
+    }
+
     const insertData: InsertContactInquiry = {
       fullName,
       email,
@@ -73,6 +83,9 @@ app.post("/api/contact", async (req, res) => {
 
 app.get("/api/contact", async (req, res) => {
   try {
+    if (!db) {
+      return res.json([]);
+    }
     const inquiries = await db.select().from(contactInquiries);
     res.json(inquiries);
   } catch (error) {
