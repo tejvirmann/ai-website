@@ -43,11 +43,14 @@ var insertContactInquirySchema = createInsertSchema(contactInquiries).pick({
 // server/index.ts
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = path.dirname(__filename);
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is required");
+var db = null;
+if (process.env.DATABASE_URL) {
+  const sql = neon(process.env.DATABASE_URL);
+  db = drizzle(sql);
+  console.log("Database connected");
+} else {
+  console.warn("DATABASE_URL not found - running without database");
 }
-var sql = neon(process.env.DATABASE_URL);
-var db = drizzle(sql);
 var app = express();
 app.use((err, _req, res, _next) => {
   console.error("Express error:", err);
@@ -67,6 +70,14 @@ app.post("/api/contact", async (req, res) => {
     if (!fullName || !email || !businessName || !businessChallenge) {
       return res.status(400).json({
         message: "Missing required fields"
+      });
+    }
+    if (!db) {
+      console.log("Database not available - contact form submission logged only");
+      return res.status(201).json({
+        message: "Contact inquiry received (database not configured)",
+        id: Date.now()
+        // temporary ID
       });
     }
     const insertData = {
@@ -92,6 +103,9 @@ app.post("/api/contact", async (req, res) => {
 });
 app.get("/api/contact", async (req, res) => {
   try {
+    if (!db) {
+      return res.json([]);
+    }
     const inquiries = await db.select().from(contactInquiries);
     res.json(inquiries);
   } catch (error) {
